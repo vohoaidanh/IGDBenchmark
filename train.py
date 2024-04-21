@@ -7,12 +7,14 @@ import torch.nn
 import argparse
 from PIL import Image
 from tensorboardX import SummaryWriter
+import numpy as np
 
 from validate import validate
 from data import create_dataloader
 from earlystop import EarlyStopping
 from networks.trainer import Trainer
 from options.train_options import TrainOptions
+from sklearn.metrics import accuracy_score, confusion_matrix
 
 
 """Currently assumes jpg_prob, blur_prob 0 or 1"""
@@ -43,12 +45,11 @@ if __name__ == '__main__':
     # Create commet logs
     comet_ml.init(api_key='MS89D8M6skI3vIQQvamYwDgEc')
     comet_train_params = {
-        'CropSize': opt.CropSize,
+        'CropSize': opt.cropSize,
         'batch_size':opt.batch_size,
         'detect_method':opt.detect_method,
         'earlystop_epoch':opt.earlystop_epoch,
         'epoch_count':opt.epoch_count,
-        'fix_backbone':opt.fix_backbone,
         'last_epoch':opt.last_epoch,
         'loadSize':opt.loadSize,
         'loss_freq':opt.loss_freq,
@@ -61,7 +62,6 @@ if __name__ == '__main__':
         'save_latest_freq':opt.save_latest_freq,
         'train_split':opt.train_split,
         'val_split':opt.val_split,
-        'weight_decay':opt.weight_decay
         }
     
     experiment = comet_ml.Experiment(
@@ -84,14 +84,20 @@ if __name__ == '__main__':
         epoch_start_time = time.time()
         iter_data_time = time.time()
         epoch_iter = 0
-
+        y_true, y_pred, loss = [], [], []
+        
         for i, data in enumerate(data_loader):
             model.total_steps += 1
             epoch_iter += opt.batch_size
 
             model.set_input(data)
             model.optimize_parameters()
-
+            
+            # Get loss, and acc of step
+            y_pred.extend(model.output.sigmoid().flatten().tolist())
+            y_true.extend(model.label.flatten().tolist())
+            
+            loss.append(model.loss.cpu().detach().numpy())
             if model.total_steps % opt.loss_freq == 0:
                 print("Train loss: {} at step: {}".format(model.loss, model.total_steps))
                 train_writer.add_scalar('loss', model.loss, model.total_steps)
@@ -103,7 +109,19 @@ if __name__ == '__main__':
 
             # print("Iter time: %d sec" % (time.time()-iter_data_time))
             # iter_data_time = time.time()
-
+            
+        # Caculate loss, acc each epoch
+        y_true, y_pred = np.array(y_true), np.array(y_pred)
+        
+        train_acc = accuracy_score(y_true, y_pred > 0.5)
+        epoch_loss = np.average(loss)
+        train_conf_mat = confusion_matrix(y_true, y_pred > 0.5)
+        
+        experiment.log_metric('train/epoch_acc', train_acc, epoch=epoch)
+        experiment.log_metric('train/epoch_loss', epoch_loss, epoch=epoch)
+        file_name = "epoch_{}_train_{}.json".format(epoch, comet_train_params['name'])
+        experiment.log_confusion_matrix(matrix = train_conf_mat, file_name=file_name, epoch=epoch)
+        
         if epoch % opt.save_epoch_freq == 0:
             print('saving the model at the end of epoch %d, iters %d' %
                   (epoch, model.total_steps))
@@ -129,7 +147,6 @@ if __name__ == '__main__':
         experiment.log_metric('val/epoch_acc', acc, epoch=epoch)
         experiment.log_metric('val/TPR', TPR, epoch=epoch)
         experiment.log_metric('val/TNR', TNR, epoch=epoch)
-        
         file_name = "val_epoch_{}_{}.json".format(epoch, comet_train_params['name'])
         experiment.log_confusion_matrix(matrix = val_conf_mat, file_name=file_name, epoch=epoch)
 
