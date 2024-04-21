@@ -1,7 +1,8 @@
 import torch
 import numpy as np
 from networks.resnet import resnet50
-from sklearn.metrics import average_precision_score, precision_recall_curve, accuracy_score
+from sklearn.metrics import average_precision_score, accuracy_score, confusion_matrix
+
 from options.test_options import TestOptions
 from data import create_dataloader
 
@@ -21,7 +22,9 @@ def validate(model, opt):
     f_acc = accuracy_score(y_true[y_true==1], y_pred[y_true==1] > 0.5)
     acc = accuracy_score(y_true, y_pred > 0.5)
     ap = average_precision_score(y_true, y_pred)
-    return acc, ap, r_acc, f_acc, y_true, y_pred
+    conf_mat = confusion_matrix(y_true, y_pred > 0.5)
+    
+    return acc, ap, conf_mat, r_acc, f_acc, y_true, y_pred
 
 
 if __name__ == '__main__':

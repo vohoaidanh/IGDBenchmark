@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import comet_ml
 import torch
 import torch.nn
 import argparse
@@ -37,6 +38,38 @@ if __name__ == '__main__':
     opt = TrainOptions().parse()
     opt.dataroot = '{}/{}/'.format(opt.dataroot, opt.train_split)
     val_opt = get_val_opt()
+    
+    ################################################################
+    # Create commet logs
+    comet_ml.init(api_key='MS89D8M6skI3vIQQvamYwDgEc')
+    comet_train_params = {
+        'CropSize': opt.CropSize,
+        'batch_size':opt.batch_size,
+        'detect_method':opt.detect_method,
+        'earlystop_epoch':opt.earlystop_epoch,
+        'epoch_count':opt.epoch_count,
+        'fix_backbone':opt.fix_backbone,
+        'last_epoch':opt.last_epoch,
+        'loadSize':opt.loadSize,
+        'loss_freq':opt.loss_freq,
+        'lr':opt.lr,
+        'mode':opt.mode,
+        'name':opt.name,
+        'niter':opt.niter,
+        'optim':opt.optim,
+        'save_epoch_freq':opt.save_epoch_freq,
+        'save_latest_freq':opt.save_latest_freq,
+        'train_split':opt.train_split,
+        'val_split':opt.val_split,
+        'weight_decay':opt.weight_decay
+        }
+    
+    experiment = comet_ml.Experiment(
+        project_name="ai-generated-image-detection"
+    )
+    
+    experiment.log_parameter('Train params', comet_train_params)
+    ####################################################################
 
     data_loader = create_dataloader(opt)
     dataset_size = len(data_loader)
@@ -79,10 +112,26 @@ if __name__ == '__main__':
 
         # Validation
         model.eval()
-        acc, ap = validate(model.model, val_opt)[:2]
+        acc, ap, val_conf_mat  = validate(model.model, val_opt)[:3]
+        
+        TP = val_conf_mat[1, 1]
+        TN = val_conf_mat[0, 0]
+        FP = val_conf_mat[0, 1]
+        FN = val_conf_mat[1, 0]
+        
+        TPR = TP / (TP + FN)
+        TNR = TN / (TN + FP)
+        
         val_writer.add_scalar('accuracy', acc, model.total_steps)
         val_writer.add_scalar('ap', ap, model.total_steps)
         print("(Val @ epoch {}) acc: {}; ap: {}".format(epoch, acc, ap))
+        
+        experiment.log_metric('val/epoch_acc', acc, epoch=epoch)
+        experiment.log_metric('val/TPR', TPR, epoch=epoch)
+        experiment.log_metric('val/TNR', TNR, epoch=epoch)
+        
+        file_name = "val_epoch_{}_{}.json".format(epoch, comet_train_params['name'])
+        experiment.log_confusion_matrix(matrix = val_conf_mat, file_name=file_name, epoch=epoch)
 
         early_stopping(acc, model)
         if early_stopping.early_stop:
@@ -92,6 +141,8 @@ if __name__ == '__main__':
                 early_stopping = EarlyStopping(patience=opt.earlystop_epoch, delta=-0.002, verbose=True)
             else:
                 print("Early stopping.")
+                experiment.end()
                 break
         model.train()
 
+    experiment.end()
