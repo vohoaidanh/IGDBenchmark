@@ -1,0 +1,10 @@
+__pycache__/
+checkpoints/
+data/__pycache__/
+networks/__pycache__/
+options/__pycache__
+weights/
+*.jpg
+*.jpeg
+*.png
+*.webp

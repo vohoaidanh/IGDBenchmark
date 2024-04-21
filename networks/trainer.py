@@ -34,7 +34,7 @@ class Trainer(BaseModel):
 
         if not self.isTrain or opt.continue_train:
             self.load_networks(opt.epoch)
-        self.model.to(opt.gpu_ids[0])
+        self.model.to(self.device)
 
 
     def adjust_learning_rate(self, min_lr=1e-6):
