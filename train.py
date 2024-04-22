@@ -20,7 +20,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 """Currently assumes jpg_prob, blur_prob 0 or 1"""
 def get_val_opt():
     val_opt = TrainOptions().parse(print_options=False)
-    val_opt.dataroot = '{}/{}/'.format(val_opt.dataroot, val_opt.val_split)
+    #val_opt.dataroot = '{}/{}/'.format(val_opt.dataroot, val_opt.val_split)
     val_opt.isTrain = False
     val_opt.no_resize = False
     val_opt.no_crop = False
@@ -38,40 +38,41 @@ def get_val_opt():
 
 if __name__ == '__main__':
     opt = TrainOptions().parse()
-    opt.dataroot = '{}/{}/'.format(opt.dataroot, opt.train_split)
+    #opt.dataroot = '{}/{}/'.format(opt.dataroot, opt.train_split)
     val_opt = get_val_opt()
     
     ################################################################
     # Create commet logs
-    comet_ml.init(api_key='MS89D8M6skI3vIQQvamYwDgEc')
-    comet_train_params = {
-        'CropSize': opt.cropSize,
-        'batch_size':opt.batch_size,
-        'detect_method':opt.detect_method,
-        'earlystop_epoch':opt.earlystop_epoch,
-        'epoch_count':opt.epoch_count,
-        'last_epoch':opt.last_epoch,
-        'loadSize':opt.loadSize,
-        'loss_freq':opt.loss_freq,
-        'lr':opt.lr,
-        'mode':opt.mode,
-        'name':opt.name,
-        'niter':opt.niter,
-        'optim':opt.optim,
-        'save_epoch_freq':opt.save_epoch_freq,
-        'save_latest_freq':opt.save_latest_freq,
-        'train_split':opt.train_split,
-        'val_split':opt.val_split,
-        }
-    
-    experiment = comet_ml.Experiment(
-        project_name="ai-generated-image-detection"
-    )
-    
-    experiment.log_parameter('Train params', comet_train_params)
+    if opt.comet:
+        comet_ml.init(api_key='MS89D8M6skI3vIQQvamYwDgEc')
+        comet_train_params = {
+            'CropSize': opt.cropSize,
+            'batch_size':opt.batch_size,
+            'detect_method':opt.detect_method,
+            'earlystop_epoch':opt.earlystop_epoch,
+            'epoch_count':opt.epoch_count,
+            'last_epoch':opt.last_epoch,
+            'loadSize':opt.loadSize,
+            'loss_freq':opt.loss_freq,
+            'lr':opt.lr,
+            'mode':opt.mode,
+            'name':opt.name,
+            'niter':opt.niter,
+            'optim':opt.optim,
+            'save_epoch_freq':opt.save_epoch_freq,
+            'save_latest_freq':opt.save_latest_freq,
+            'train_split':opt.train_split,
+            'val_split':opt.val_split,
+            }
+        
+        experiment = comet_ml.Experiment(
+            project_name="ai-generated-image-detection"
+        )
+        
+        experiment.log_parameter('Train params', comet_train_params)
     ####################################################################
 
-    data_loader = create_dataloader(opt)
+    data_loader = create_dataloader(opt, opt.train_split)
     dataset_size = len(data_loader)
     print('#training images = %d' % dataset_size)
 
@@ -147,7 +148,7 @@ if __name__ == '__main__':
         experiment.log_metric('val/epoch_acc', acc, epoch=epoch)
         experiment.log_metric('val/TPR', TPR, epoch=epoch)
         experiment.log_metric('val/TNR', TNR, epoch=epoch)
-        file_name = "val_epoch_{}_{}.json".format(epoch, comet_train_params['name'])
+        file_name = "epoch_{}_val_{}.json".format(epoch, comet_train_params['name'])
         experiment.log_confusion_matrix(matrix = val_conf_mat, file_name=file_name, epoch=epoch)
 
         early_stopping(acc, model)

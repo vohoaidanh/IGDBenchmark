@@ -5,6 +5,7 @@ networks/__pycache__/
 options/__pycache__/
 .spyproject/
 weights/
+mydataset/
 *.jpg
 *.jpeg
 *.png

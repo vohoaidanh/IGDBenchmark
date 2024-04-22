@@ -15,12 +15,13 @@ dt = datetime.now().strftime("%Y%m%d%H%M%S")
 opt = TestOptions().parse(print_options=False)
 ######################################################################
 comet_params = {
-    'CropSize': opt.CropSize,
+    'CropSize': opt.cropSize,
     'batch_size':opt.batch_size,
-    'detect_method':opt.detect_method,
-    'noise_type': opt.noise_type,
+    'detect_method':'CNNDetection',
+    'noise_type': 'None',
     'model_path': opt.model_path,
-    'jpg_qual': opt.jpg_qual
+    'jpg_qual': opt.jpg_qual,
+    'name': 'Run test set with RGB CNNDetection on RealFakeDB512s '
     }
 
 comet_ml.init(api_key='MS89D8M6skI3vIQQvamYwDgEc')
@@ -37,7 +38,7 @@ rows = [["{} model testing on...".format(model_name)],
 print("{} model testing on...".format(model_name))
 for v_id, val in enumerate(vals):
     opt.dataroot = '{}/{}'.format(dataroot, val)
-    opt.classes = os.listdir(opt.dataroot) if multiclass[v_id] else ['']
+    opt.classes = ['']#os.listdir(opt.dataroot) if multiclass[v_id] else ['']
     opt.no_resize = True    # testing without resizing by default
 
     model = resnet50(num_classes=1)

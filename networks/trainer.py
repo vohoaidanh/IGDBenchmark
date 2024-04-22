@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 from networks.resnet import resnet50
 from networks.base_model import BaseModel, init_weights
+from util import get_model
 
 
 class Trainer(BaseModel):
@@ -11,11 +12,13 @@ class Trainer(BaseModel):
 
     def __init__(self, opt):
         super(Trainer, self).__init__(opt)
-
+        self.opt = opt
         if self.isTrain and not opt.continue_train:
-            self.model = resnet50(pretrained=True)
-            self.model.fc = nn.Linear(2048, 1)
-            torch.nn.init.normal_(self.model.fc.weight.data, 0.0, opt.init_gain)
+            #self.model = resnet50(pretrained=True)
+            #self.model.fc = nn.Linear(2048, 1)
+            #torch.nn.init.normal_(self.model.fc.weight.data, 0.0, opt.init_gain)
+            
+            self.model = get_model(opt)
 
         if not self.isTrain or opt.continue_train:
             self.model = resnet50(num_classes=1)
@@ -44,13 +47,22 @@ class Trainer(BaseModel):
                 return False
         return True
 
-    def set_input(self, input):
-        self.input = input[0].to(self.device)
-        self.label = input[1].to(self.device).float()
+    def set_input(self, input, detect_method='CNNDetection'):
+        if self.opt.detect_method.lower() in ['shading']:
+            self.input = input[0].to(self.device)
+            self.shading = input[1].to(self.device)
+            self.label = input[-1].to(self.device).float()
+        else:
+            self.input = input[0].to(self.device)
+            self.label = input[-1].to(self.device).float()         
+            
 
 
     def forward(self):
-        self.output = self.model(self.input)
+        if self.opt.detect_method.lower() in ['shading']:
+            self.output = self.model(self.input, self.shading)
+        else:
+            self.output = self.model(self.input)
 
     def get_loss(self):
         return self.loss_fn(self.output.squeeze(1), self.label)

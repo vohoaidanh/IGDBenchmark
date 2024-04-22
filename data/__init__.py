@@ -2,13 +2,15 @@ import torch
 import numpy as np
 from torch.utils.data.sampler import WeightedRandomSampler
 
-from .datasets import dataset_folder
+from .datasets import dataset_folder, shading_dataset
 
 
-def get_dataset(opt):
+def get_dataset(opt,split='train'):
+    if opt.detect_method.lower() in ['shading']:
+        return shading_dataset(opt, split)
     dset_lst = []
     for cls in opt.classes:
-        root = opt.dataroot + '/' + cls
+        root = '{}/{}/'.format(opt.dataroot, split) + '/' + cls
         dset = dataset_folder(opt, root)
         dset_lst.append(dset)
     return torch.utils.data.ConcatDataset(dset_lst)
@@ -27,9 +29,9 @@ def get_bal_sampler(dataset):
     return sampler
 
 
-def create_dataloader(opt):
+def create_dataloader(opt,split='train'):
     shuffle = not opt.serial_batches if (opt.isTrain and not opt.class_bal) else False
-    dataset = get_dataset(opt)
+    dataset = get_dataset(opt,split=split)
     sampler = get_bal_sampler(dataset) if opt.class_bal else None
 
     data_loader = torch.utils.data.DataLoader(dataset,
@@ -38,3 +40,8 @@ def create_dataloader(opt):
                                               sampler=sampler,
                                               num_workers=int(opt.num_threads))
     return data_loader
+
+
+
+
+
