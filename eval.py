@@ -39,7 +39,7 @@ rows = [["{} model testing on...".format(model_name)],
 
 print("{} model testing on...".format(model_name))
 for v_id, val in enumerate(vals):
-    opt.dataroot = '{}/{}'.format(dataroot, val)
+    #opt.dataroot = '{}/{}'.format(dataroot, val)
     opt.classes = ['']#os.listdir(opt.dataroot) if multiclass[v_id] else ['']
     opt.no_resize = True    # testing without resizing by default
     #model = resnet50(num_classes=1)

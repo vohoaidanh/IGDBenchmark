@@ -19,8 +19,8 @@ class Trainer(BaseModel):
             #torch.nn.init.normal_(self.model.fc.weight.data, 0.0, opt.init_gain)
             
             self.model = get_model(opt, 
-                                   checkpoint1 = 'weights/model_1.pth',
-                                   checkpoint2 = 'weights/model_2.pth')
+                                   checkpoint1 = 'resnet50',
+                                   checkpoint2 = 'resnet50')
 
         
         if not self.isTrain or opt.continue_train:

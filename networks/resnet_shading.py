@@ -172,9 +172,11 @@ def resnet50(checkpoint='resnet50'):
     model = ResNet(Bottleneck, [3, 4, 6, 3])
     
     if checkpoint == '':
+        print('Create model without checkpoint')
         return model
     
     if checkpoint in model_urls:
+        print('load checkpoint from: ', model_urls[checkpoint])
         model.load_state_dict(model_zoo.load_url(model_urls[checkpoint]))
         return model
 
