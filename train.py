@@ -117,12 +117,12 @@ if __name__ == '__main__':
         train_acc = accuracy_score(y_true, y_pred > 0.5)
         epoch_loss = np.average(loss)
         train_conf_mat = confusion_matrix(y_true, y_pred > 0.5)
-        
-        experiment.log_metric('train/epoch_acc', train_acc, epoch=epoch)
-        experiment.log_metric('train/epoch_loss', epoch_loss, epoch=epoch)
-        file_name = "epoch_{}_train_{}.json".format(epoch, comet_train_params['name'])
-        experiment.log_confusion_matrix(matrix = train_conf_mat, file_name=file_name, epoch=epoch)
-        
+        if opt.comet:
+            experiment.log_metric('train/epoch_acc', train_acc, epoch=epoch)
+            experiment.log_metric('train/epoch_loss', epoch_loss, epoch=epoch)
+            file_name = "epoch_{}_train_{}.json".format(epoch, comet_train_params['name'])
+            experiment.log_confusion_matrix(matrix = train_conf_mat, file_name=file_name, epoch=epoch)
+            
         if epoch % opt.save_epoch_freq == 0:
             print('saving the model at the end of epoch %d, iters %d' %
                   (epoch, model.total_steps))
@@ -143,13 +143,13 @@ if __name__ == '__main__':
         
         val_writer.add_scalar('accuracy', acc, model.total_steps)
         val_writer.add_scalar('ap', ap, model.total_steps)
-        print("(Val @ epoch {}) acc: {}; ap: {}".format(epoch, acc, ap))
-        
-        experiment.log_metric('val/epoch_acc', acc, epoch=epoch)
-        experiment.log_metric('val/TPR', TPR, epoch=epoch)
-        experiment.log_metric('val/TNR', TNR, epoch=epoch)
-        file_name = "epoch_{}_val_{}.json".format(epoch, comet_train_params['name'])
-        experiment.log_confusion_matrix(matrix = val_conf_mat, file_name=file_name, epoch=epoch)
+        print("(Val @ epoch {}) acc: {}; ap: {}; TPR: {}; TNR: {}".format(epoch, acc, ap, TPR, TNR))
+        if opt.comet:
+            experiment.log_metric('val/epoch_acc', acc, epoch=epoch)
+            experiment.log_metric('val/TPR', TPR, epoch=epoch)
+            experiment.log_metric('val/TNR', TNR, epoch=epoch)
+            file_name = "epoch_{}_val_{}.json".format(epoch, comet_train_params['name'])
+            experiment.log_confusion_matrix(matrix = val_conf_mat, file_name=file_name, epoch=epoch)
 
         early_stopping(acc, model)
         if early_stopping.early_stop:
@@ -159,8 +159,9 @@ if __name__ == '__main__':
                 early_stopping = EarlyStopping(patience=opt.earlystop_epoch, delta=-0.002, verbose=True)
             else:
                 print("Early stopping.")
-                experiment.end()
+                if opt.comet:
+                    experiment.end()
                 break
         model.train()
-
-    experiment.end()
+    if opt.comet:
+        experiment.end()

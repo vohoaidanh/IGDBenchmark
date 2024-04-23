@@ -24,7 +24,7 @@ def unnormalize(tens, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
         mean)[None, :, None, None]
 
 
-def get_model(opt):
+def get_model(opt, **kwargs):
     if opt.detect_method.lower()  in ["cnndetection","cnnsport","dire"]:
         if opt.isTrain:
             model = resnet50(pretrained=True)
@@ -36,10 +36,10 @@ def get_model(opt):
 
     elif opt.detect_method.lower() == "shading":
         if opt.isTrain:
-            model = resnet50_shading(num_classes=1)
+            model = resnet50_shading(num_classes=1, pretrained=True, **kwargs)
             return model
         else:
-            return resnet50_shading(num_classes=1, pretrained=False)
+            return resnet50_shading(num_classes=1, pretrained=False, **kwargs)
     
     else:
         raise ValueError(f"Unsupported model_type: {opt.detect_method}")

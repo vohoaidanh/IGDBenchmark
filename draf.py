@@ -70,6 +70,41 @@ for a,b,c in os.walk(r'mydataset/ShadingDB/shading'):
                 
 
 
+for param in model.model.origin.parameters():
+    print(param.requires_grad)
+    
+    
+    
+import torch
+from networks.resnet import resnet50
+
+state_dict = torch.load('weights/model_1.pth',map_location=torch.device('cpu'))
+state_dict = state_dict['model']
+model1 = resnet50()
+model1 = model1.load_state_dict(state_dict)
+
+for last_layer_name in model1.state_dict():
+    print(last_layer_name)
+    
+    
+for i in state_dict['model']:
+    print(i)
+    
+
+
+
+
+model.model.origin.layer4[1].conv1
+
+
+model.model.head[0]
+
+
+
+for name, param in model.model.named_parameters():
+    print(name, param.requires_grad)
+
+
 
 
 

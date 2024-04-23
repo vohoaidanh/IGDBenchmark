@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
+import torch.nn.init as init
 
 
 __all__ = ['ResNet', 'resnet50_shading']
@@ -163,29 +164,51 @@ class ResNet(nn.Module):
 
         return x
 
-def resnet50(pretrained=False, **kwargs):
+def resnet50(checkpoint='resnet50'):
     """Constructs a ResNet-50 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
-    if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet50']))
-    return model
+    model = ResNet(Bottleneck, [3, 4, 6, 3])
+    
+    if checkpoint == '':
+        return model
 
-def resnet50_shading(num_classes=1,pretrained=True):
-    model = ShadingClf(num_classes, pretrained = pretrained)
+    if checkpoint not in model_urls:
+        print('loading:' ,checkpoint)
+        state_dict = torch.load(checkpoint, map_location=torch.device('cpu'))['model']
+        #model.load_state_dict(state_dict)
+        for i, (layer_name, layer_params) in enumerate(state_dict.items()):
+            if 'fc' in layer_name:
+                continue
+            model.state_dict()[layer_name].copy_(layer_params)
+        return model
+    
+    if checkpoint in model_urls:
+        model.load_state_dict(model_zoo.load_url(model_urls[checkpoint]))
+        return model
+
+def resnet50_shading(num_classes=1, pretrained=True, **kwargs):
+    model = ShadingClf(num_classes, pretrained = pretrained, **kwargs)
     return model
 
 class ShadingClf(nn.Module):
-    def __init__(self, num_classes,pretrained=True):
+    def __init__(self, num_classes,pretrained=True, **kwargs):
         super(ShadingClf,self).__init__()
         
-        self.origin =  resnet50(pretrained = pretrained)
-        self.shading = resnet50(pretrained = pretrained)
+        self.origin =  resnet50(checkpoint=kwargs['checkpoint1'])
+        self.shading = resnet50(checkpoint=kwargs['checkpoint2'])
         
         self.origin.fc = nn.Identity()
         self.shading.fc = nn.Identity()
+        
+        for name, param in self.origin.named_parameters():
+            param.requires_grad = False
+        for name, param in self.shading.named_parameters():
+            param.requires_grad = False
+        
+        self.origin.eval()
+        self.shading.eval()
         
         self.head = nn.Sequential(
             nn.Linear(2048 * 2, 2048), 
@@ -193,6 +216,10 @@ class ShadingClf(nn.Module):
             nn.Dropout(p=0.3),
             nn.Linear(2048, num_classes)
         )
+        if pretrained:
+            for m in self.head:
+                if isinstance(m, nn.Linear):
+                    init.xavier_uniform_(m.weight)
         
     def forward(self, x1, x2):
         #xi is GRB image origin

@@ -143,7 +143,7 @@ def processing(img,opt,name):
     elif opt.no_crop:
         crop_func = transforms.Lambda(lambda img: img)
     else:
-        crop_func = transforms.CenterCrop(opt.CropSize)
+        crop_func = transforms.CenterCrop(opt.cropSize)
 
     if opt.isTrain and not opt.no_flip:
         flip_func = transforms.RandomHorizontalFlip()

@@ -84,10 +84,6 @@ class shading_dataset(Dataset):
         
         target  = self.labels[idx]
         
-        if (not self.opt.isTrain) and (not self.opt.isVal):
-            rgb = custom_augment(rgb, self.opt)
-            shading = custom_augment(shading, self.opt)
-            
         if self.opt.detect_method.lower() in ['shading']:
             rgb = processing(rgb,self.opt,'imagenet')
             shading = processing(shading,self.opt,'imagenet')
