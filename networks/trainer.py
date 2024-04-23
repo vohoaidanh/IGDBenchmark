@@ -20,7 +20,7 @@ class Trainer(BaseModel):
             
             self.model = get_model(opt, 
                                    checkpoint1 = 'weights/model_1.pth',
-                                   checkpoint2 = 'weights/model_1.pth')
+                                   checkpoint2 = 'weights/model_2.pth')
 
         
         if not self.isTrain or opt.continue_train:

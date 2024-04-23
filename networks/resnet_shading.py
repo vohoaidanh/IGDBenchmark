@@ -173,6 +173,10 @@ def resnet50(checkpoint='resnet50'):
     
     if checkpoint == '':
         return model
+    
+    if checkpoint in model_urls:
+        model.load_state_dict(model_zoo.load_url(model_urls[checkpoint]))
+        return model
 
     if checkpoint not in model_urls:
         print('loading:' ,checkpoint)
@@ -182,10 +186,6 @@ def resnet50(checkpoint='resnet50'):
             if 'fc' in layer_name:
                 continue
             model.state_dict()[layer_name].copy_(layer_params)
-        return model
-    
-    if checkpoint in model_urls:
-        model.load_state_dict(model_zoo.load_url(model_urls[checkpoint]))
         return model
 
 def resnet50_shading(num_classes=1, pretrained=True, **kwargs):
@@ -202,13 +202,14 @@ class ShadingClf(nn.Module):
         self.origin.fc = nn.Identity()
         self.shading.fc = nn.Identity()
         
-        for name, param in self.origin.named_parameters():
-            param.requires_grad = False
-        for name, param in self.shading.named_parameters():
-            param.requires_grad = False
-        
-        self.origin.eval()
-        self.shading.eval()
+        if 'freeze' in kwargs:
+            for name, param in self.origin.named_parameters():
+                param.requires_grad = False
+            for name, param in self.shading.named_parameters():
+                param.requires_grad = False
+            
+            self.origin.eval()
+            self.shading.eval()
         
         self.head = nn.Sequential(
             nn.Linear(2048 * 2, 2048), 
