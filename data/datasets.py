@@ -54,7 +54,6 @@ class shading_dataset(Dataset):
         self.rgb_dir = rgb_dir
         self.shading_dir = shading_dir
         self.split = split
-        print(50*'#','\nloading shading_dataset from: ', opt.root,'\n', 50*'#')
         real_rgb_name = os.listdir(os.path.join(self.root, self.rgb_dir, self.split, '0_real'))
         real_label_list = [0 for _ in range(len(real_rgb_name))]
         
@@ -94,7 +93,6 @@ class shading_dataset(Dataset):
         return rgb, shading, target
 
 def binary_dataset(opt, root):
-    print(50*'#','\nloading binary_dataset from: ', root,'\n', 50*'#')
     if opt.isTrain:
         crop_func = transforms.RandomCrop(opt.cropSize)
     elif opt.no_crop:
@@ -128,7 +126,6 @@ class fredect_dataset():
         self.opt = opt
         self.root = opt.dataroot
         self.split = split
-        print(50*'#','\n loading fredect_dataset from: ', self.root,'\n', 50*'#')
         
         real_img_name = os.listdir(os.path.join(self.root, self.split, '0_real'))
         real_img_list = [os.path.join(self.root, self.split, '0_real',i) \

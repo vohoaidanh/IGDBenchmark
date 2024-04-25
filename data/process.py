@@ -332,7 +332,6 @@ def center_crop_arr(pil_image, image_size):
     return arr[crop_y : crop_y + image_size, crop_x : crop_x + image_size]
 
 
-
 def processing_DIRE(img,opt,imgname):
 
     model=opt.diffusion_model

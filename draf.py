@@ -107,7 +107,7 @@ for name, param in model.model.named_parameters():
 import torch
 a = torch.load('weights/auxiliary/dct_mean')
 
-
+b = a.permute(1,2,0)
 
 
 
