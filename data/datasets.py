@@ -14,7 +14,7 @@ from PIL import Image
 from PIL import ImageFile
 from scipy.ndimage.filters import gaussian_filter
 from skimage.transform import resize
-from .process import processing
+from .process import processing, processing_DCT
 
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -121,6 +121,38 @@ def binary_dataset(opt, root):
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ]))
     return dset
+
+class fredect_dataset():
+    def __init__(self, opt):
+        self.opt = opt
+        self.root = opt.dataroot
+        real_img_list = loadpathslist(self.root,'0_real')    
+        real_label_list = [0 for _ in range(len(real_img_list))]
+        fake_img_list = loadpathslist(self.root,'1_fake')
+        fake_label_list = [1 for _ in range(len(fake_img_list))]
+        self.img = real_img_list+fake_img_list
+        self.label = real_label_list+fake_label_list
+
+        # print('directory, realimg, fakeimg:', self.root, len(real_img_list), len(fake_img_list))
+
+
+    def __getitem__(self, index):
+        img, target = Image.open(self.img[index]).convert('RGB'), self.label[index]
+        imgname = self.img[index]
+        # compute scaling
+        height, width = img.height, img.width
+        if (not self.opt.isTrain) and (not self.opt.isVal):
+            img = custom_augment(img, self.opt)
+
+        if self.opt.detect_method.lower() in ['cnnspot','cnndetection']:
+            img = processing(img,self.opt,'imagenet')
+        elif self.opt.detect_method.lower() == 'fredect':
+            img = processing_DCT(img,self.opt)
+     
+        else:
+            raise ValueError(f"Unsupported model_type: {self.opt.detect_method}")
+
+        return img, target
 
 
 class FileNameDataset(datasets.ImageFolder):

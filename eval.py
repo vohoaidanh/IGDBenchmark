@@ -19,11 +19,11 @@ if opt.comet:
     comet_params = {
         'CropSize': opt.cropSize,
         'batch_size':opt.batch_size,
-        'detect_method':'CNNDetection',
+        'detect_method':opt.detect_method,
         'noise_type': 'None',
         'model_path': opt.model_path,
         'jpg_qual': opt.jpg_qual,
-        'name': 'Run test set with RGB CNNDetection on RealFakeDB512s '
+        'name': 'Run test set with Shading + RGB best.pth'
         }
     
     comet_ml.init(api_key='MS89D8M6skI3vIQQvamYwDgEc')
@@ -49,10 +49,11 @@ for v_id, val in enumerate(vals):
                       checkpoint2 = '')
     
     state_dict = torch.load(model_path, map_location='cpu')
+    print('load model: ',model_path)
     model.load_state_dict(state_dict['model'])
     model.cuda()
     model.eval()
-
+    opt.val_split = val
     acc, ap, conf_mat = validate(model, opt)[:3]
     
     TP = conf_mat[1, 1]

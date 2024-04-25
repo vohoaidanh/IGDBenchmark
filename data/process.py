@@ -330,7 +330,6 @@ def processing_DIRE(img,opt,imgname):
     img_list.append(torch.unsqueeze(img,0))
     img=torch.cat(img_list,0)
 
-    
     reverse_fn = diffusion.ddim_reverse_sample_loop
     img = reshape_image(img, args.image_size)
     
@@ -372,3 +371,9 @@ def processing_DIRE(img,opt,imgname):
    
     
     return img_dire
+
+
+
+
+
+

@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from networks.resnet import resnet50
 from sklearn.metrics import average_precision_score, accuracy_score, confusion_matrix
-
+from tqdm import tqdm
 from options.test_options import TestOptions
 from data import create_dataloader
 
@@ -38,7 +38,7 @@ def validate_shading(model, opt):
 
     with torch.no_grad():
         y_true, y_pred = [], []
-        for img, shading, label in data_loader:
+        for img, shading, label in tqdm(data_loader):
             in_tens = img.cuda()
             in_tens_shading = shading.cuda()
             y_pred.extend(model(in_tens,in_tens_shading).sigmoid().flatten().tolist())

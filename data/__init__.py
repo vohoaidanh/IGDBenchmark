@@ -2,12 +2,16 @@ import torch
 import numpy as np
 from torch.utils.data.sampler import WeightedRandomSampler
 
-from .datasets import dataset_folder, shading_dataset
+from .datasets import dataset_folder, shading_dataset, fredect_dataset
 
 
 def get_dataset(opt,split='train'):
     if opt.detect_method.lower() in ['shading']:
         return shading_dataset(opt, split)
+    
+    if opt.detect_method.lower() in ['fredect']:
+        return fredect_dataset(opt, split)
+    
     dset_lst = []
     for cls in opt.classes:
         root = '{}/{}/'.format(opt.dataroot, split) + '/' + cls
