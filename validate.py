@@ -8,7 +8,7 @@ from data import create_dataloader
 
 
 def validate(model, opt):
-    if opt.detect_method.lower() in ['cnndetection', 'dire']:
+    if opt.detect_method.lower() in ['cnndetection', 'dire','fredect']:
         return validate_cnndetection(model, opt)
     
     if opt.detect_method.lower() in ['shading']:

@@ -124,19 +124,19 @@ def binary_dataset(opt, root):
     return dset
 
 class fredect_dataset():
-    def __init__(self, opt):
+    def __init__(self, opt,split):
         self.opt = opt
         self.root = opt.dataroot
+        self.split = split
+        print(50*'#','\n loading fredect_dataset from: ', self.root,'\n', 50*'#')
         
-        print(50*'#','\nloading fredect_dataset from: ', opt.root,'\n', 50*'#')
-        
-        real_img_name = loadpathslist(self.root,'0_real')    
+        real_img_name = os.listdir(os.path.join(self.root, self.split, '0_real'))
         real_img_list = [os.path.join(self.root, self.split, '0_real',i) \
                          for i in real_img_name if i.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))]
         real_label_list = [0 for _ in range(len(real_img_list))]
         
-        fake_img_name = loadpathslist(self.root,'1_fake')
-        fake_img_list = [os.path.join(self.root, self.split, '0_real',i) \
+        fake_img_name =  os.listdir(os.path.join(self.root, self.split, '1_fake'))
+        fake_img_list = [os.path.join(self.root, self.split, '1_fake',i) \
                          for i in fake_img_name if i.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))]
         fake_label_list = [1 for _ in range(len(fake_img_list))]
         
@@ -145,7 +145,7 @@ class fredect_dataset():
         self.labels = real_label_list + fake_label_list
 
         # print('directory, realimg, fakeimg:', self.root, len(real_img_list), len(fake_img_list))
-        opt.cropSize = 256
+        #opt.cropSize = 224
         opt.dct_mean = torch.load('./weights/auxiliary/dct_mean').permute(1,2,0).numpy()
         opt.dct_var = torch.load('./weights/auxiliary/dct_var').permute(1,2,0).numpy()
     

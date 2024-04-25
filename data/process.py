@@ -226,6 +226,8 @@ def dct2_wrapper(image, mean, var, log=True, epsilon=1e-12):
         image += epsilon  # no zero in log
         image = np.log(image)
     # normalize
+    #print(20*'c', image.shape)
+    #print(20*'c','mean:', mean.shape)
     image = (image - mean) / np.sqrt(var)
     return image
 
@@ -252,6 +254,7 @@ def processing_DCT(img,opt):
 
     input_img = transforms.ToTensor()(input_img)
     input_img = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(input_img)
+    input_img =input_img.permute(1,2,0)
     cropped_img = torch.from_numpy(dct2_wrapper(input_img, opt.dct_mean, opt.dct_var)).permute(2,0,1).to(dtype=torch.float)
     return cropped_img
 

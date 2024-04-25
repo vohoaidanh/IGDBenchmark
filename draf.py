@@ -104,7 +104,8 @@ model.model.head[0]
 for name, param in model.model.named_parameters():
     print(name, param.requires_grad)
 
-
+import torch
+a = torch.load('weights/auxiliary/dct_mean')
 
 
 

@@ -25,7 +25,7 @@ def unnormalize(tens, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
 
 
 def get_model(opt, **kwargs):
-    if opt.detect_method.lower()  in ["cnndetection","cnnsport","dire"]:
+    if opt.detect_method.lower()  in ["cnndetection","cnnsport","dire", "fredect"]:
         if opt.isTrain:
             model = resnet50(pretrained=True)
             model.fc = nn.Linear(2048, 1)

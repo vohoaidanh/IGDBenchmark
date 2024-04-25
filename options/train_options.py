@@ -21,4 +21,5 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--lr', type=float, default=0.0001, help='initial learning rate for adam')
 
         self.isTrain = True
+        self.isVal = False
         return parser
