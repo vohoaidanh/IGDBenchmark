@@ -232,29 +232,41 @@ def dct2_wrapper(image, mean, var, log=True, epsilon=1e-12):
 
 
 def processing_DCT(img,opt):
+           
     input_img = copy.deepcopy(img)
+    
+    if not opt.isTrain and opt.no_resize:
+        pass
+    else:
+        input_img = transforms.Resize(opt.loadSize)(input_img)
+    
+    if opt.isTrain:
+        input_img = transforms.RandomCrop(opt.cropSize)(input_img)
+    elif opt.no_crop: 
+        pass
+    else:
+        input_img = transforms.CenterCrop(opt.cropSize)(input_img)
+        
+    if opt.isTrain and not opt.no_flip:
+        input_img = transforms.RandomHorizontalFlip()(input_img)
+
     input_img = transforms.ToTensor()(input_img)
     input_img = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(input_img)
-
-    img = transforms.Resize(opt.loadSize)(img)
-    img = transforms.CenterCrop(opt.CropSize)(img)
-    cropped_img = torch.from_numpy(dct2_wrapper(img, opt.dct_mean, opt.dct_var)).permute(2,0,1).to(dtype=torch.float)
+    cropped_img = torch.from_numpy(dct2_wrapper(input_img, opt.dct_mean, opt.dct_var)).permute(2,0,1).to(dtype=torch.float)
     return cropped_img
 
 
 def processing_PSM(img,opt):
     height, width = img.height, img.width
 
-    
     input_img = copy.deepcopy(img)
     input_img = transforms.ToTensor()(input_img)
     input_img = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(input_img)
 
-    img = transforms.Resize(opt.CropSize)(img)
-    img = transforms.CenterCrop(opt.CropSize)(img)
+    img = transforms.Resize(opt.cropSize)(img)
+    img = transforms.CenterCrop(opt.cropSize)(img)
     cropped_img = transforms.ToTensor()(img)
     cropped_img = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(cropped_img)
-
 
     scale = torch.tensor([height, width])
 

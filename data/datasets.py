@@ -54,7 +54,7 @@ class shading_dataset(Dataset):
         self.rgb_dir = rgb_dir
         self.shading_dir = shading_dir
         self.split = split
-        
+        print(50*'#','\nloading shading_dataset from: ', opt.root,'\n', 50*'#')
         real_rgb_name = os.listdir(os.path.join(self.root, self.rgb_dir, self.split, '0_real'))
         real_label_list = [0 for _ in range(len(real_rgb_name))]
         
@@ -94,6 +94,7 @@ class shading_dataset(Dataset):
         return rgb, shading, target
 
 def binary_dataset(opt, root):
+    print(50*'#','\nloading binary_dataset from: ', root,'\n', 50*'#')
     if opt.isTrain:
         crop_func = transforms.RandomCrop(opt.cropSize)
     elif opt.no_crop:
@@ -109,7 +110,7 @@ def binary_dataset(opt, root):
         rz_func = transforms.Lambda(lambda img: img)
     else:
         rz_func = transforms.Lambda(lambda img: custom_resize(img, opt))
-
+    
     dset = datasets.ImageFolder(
             root,
             transforms.Compose([
@@ -126,21 +127,36 @@ class fredect_dataset():
     def __init__(self, opt):
         self.opt = opt
         self.root = opt.dataroot
-        real_img_list = loadpathslist(self.root,'0_real')    
+        
+        print(50*'#','\nloading fredect_dataset from: ', opt.root,'\n', 50*'#')
+        
+        real_img_name = loadpathslist(self.root,'0_real')    
+        real_img_list = [os.path.join(self.root, self.split, '0_real',i) \
+                         for i in real_img_name if i.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))]
         real_label_list = [0 for _ in range(len(real_img_list))]
-        fake_img_list = loadpathslist(self.root,'1_fake')
+        
+        fake_img_name = loadpathslist(self.root,'1_fake')
+        fake_img_list = [os.path.join(self.root, self.split, '0_real',i) \
+                         for i in fake_img_name if i.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))]
         fake_label_list = [1 for _ in range(len(fake_img_list))]
-        self.img = real_img_list+fake_img_list
-        self.label = real_label_list+fake_label_list
+        
+
+        self.img = real_img_list + fake_img_list
+        self.labels = real_label_list + fake_label_list
 
         # print('directory, realimg, fakeimg:', self.root, len(real_img_list), len(fake_img_list))
-
+        opt.cropSize = 256
+        opt.dct_mean = torch.load('./weights/auxiliary/dct_mean').permute(1,2,0).numpy()
+        opt.dct_var = torch.load('./weights/auxiliary/dct_var').permute(1,2,0).numpy()
+    
+    def __len__(self):
+        return len(self.labels)
 
     def __getitem__(self, index):
-        img, target = Image.open(self.img[index]).convert('RGB'), self.label[index]
-        imgname = self.img[index]
+        img, target = Image.open(self.img[index]).convert('RGB'), self.labels[index]
+        #imgname = self.img[index]
         # compute scaling
-        height, width = img.height, img.width
+        #height, width = img.height, img.width
         if (not self.opt.isTrain) and (not self.opt.isVal):
             img = custom_augment(img, self.opt)
 
