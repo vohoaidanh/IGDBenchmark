@@ -255,7 +255,7 @@ def processing_DCT(img,opt):
     if opt.isTrain and not opt.no_flip:
         input_img = transforms.RandomHorizontalFlip()(input_img)
 
-    #input_img =input_img.permute(1,2,0)
+    input_img =input_img.permute(1,2,0)
     cropped_img = torch.from_numpy(dct2_wrapper(input_img, opt.dct_mean, opt.dct_var)).permute(2,0,1).to(dtype=torch.float)
     return cropped_img
 
